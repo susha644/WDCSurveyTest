@@ -130,25 +130,32 @@ public class ContactListActivityTest extends BaseActivityInstrumentationTestCase
 		    	contactListView.performItemClick(contactListView, 0, contactListView.getItemIdAtPosition(0));
 		    }
 		});
+		
+		// if running on phone then check 
+		// for detail activity
+        Activity detailActivity = null;
+		if (!getActivity().isTwoPane()) {
+	        // Wait for detail screen
+			detailActivity = monitor.waitForActivityWithTimeout(10000);
+	        assertTrue(detailActivity instanceof ContactDetailActivity);
+		}
         
-        // Wait for detail screen
-        final Activity detailActivity = monitor.waitForActivityWithTimeout(10000);
-        assertTrue(detailActivity instanceof ContactDetailActivity);
-        
-        // Wait for load to complete
+		// need this to get reference to detail fields
+		final Activity detailReference = getActivity().isTwoPane() ? getActivity() : detailActivity;
+
+		// Wait for load to complete
         waitForABit();
-        waitForRender();
         
-        assertEquals("Account Name", ((TextView) detailActivity.findViewById(R.id.account_detail_label)).getText());
-        assertEquals("Sr Sales Rep", ((TextView) detailActivity.findViewById(R.id.title_detail_label)).getText());
+        assertEquals("Account Name", ((TextView) detailReference.findViewById(R.id.account_detail_label)).getText());
+        assertEquals("Sr Sales Rep", ((TextView) detailReference.findViewById(R.id.title_detail_label)).getText());
         
         // fill in the Question fields
 		runTestOnUiThread(new Runnable() {
 		    @Override
 		    public void run() {
-		        ((TextView) detailActivity.findViewById(R.id.question_1_hint)).setText("Answer to question 1");
-		        ((TextView) detailActivity.findViewById(R.id.question_2_hint)).setText("Answer to question 2");
-		        ((TextView) detailActivity.findViewById(R.id.question_3_hint)).setText("Answer to question 3");
+		        ((TextView) detailReference.findViewById(R.id.question_1_hint)).setText("Answer to question 1");
+		        ((TextView) detailReference.findViewById(R.id.question_2_hint)).setText("Answer to question 2");
+		        ((TextView) detailReference.findViewById(R.id.question_3_hint)).setText("Answer to question 3");
 		    }
 		});
 		
@@ -160,11 +167,11 @@ public class ContactListActivityTest extends BaseActivityInstrumentationTestCase
 		RestUtil.HTTP_ACCESOR = mockHttpAccessor;
         
         // hit the submit button
-        clickView(detailActivity.findViewById(R.id.submit_button));
+        clickView(detailReference.findViewById(R.id.submit_button));
         
         waitForABit();
         
-        // Unfortunately looks like there is no way to check for a toast
+        // XXX: Unfortunately looks like there is no way to check for a toast
         // we could do a dialog instead but doesn't make sense just for the sake of
         // testing. Or may be use the EventObserver with a new event type.        
     }
